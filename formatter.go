@@ -57,6 +57,10 @@ type ColorScheme struct {
 	TimestampStyle  string
 }
 
+type LoggingContext interface {
+	String() string
+}
+
 type compiledColorScheme struct {
 	InfoLevelColor  func(string) string
 	WarnLevelColor  func(string) string
@@ -252,19 +256,17 @@ func (f *TextFormatter) printColored(b *bytes.Buffer, entry *logrus.Entry, keys 
 	}
 
 	level := levelColor(fmt.Sprintf("%5s", levelText))
-	prefix := ""
+	prefix := f.extractPrefix(entry)
 	message := entry.Message
+	messageFormat := "%s"
 
-	if prefixValue, ok := entry.Data["prefix"]; ok {
+	if len(prefix) != 0 {
 		if f.MinPrefixWidth != 0 {
-			prefix = fmt.Sprintf("%-*s", f.MinPrefixWidth, prefixValue.(string))
-		} else {
-			prefix = prefixValue.(string)
+			prefix = fmt.Sprintf("%-*s", f.MinPrefixWidth, prefix)
 		}
 		prefix = colorScheme.PrefixColor(" [" + prefix + "]")
 	}
 
-	messageFormat := "%s"
 	if f.SpacePadding != 0 {
 		messageFormat = fmt.Sprintf("%%-%ds", f.SpacePadding)
 	}
@@ -286,6 +288,20 @@ func (f *TextFormatter) printColored(b *bytes.Buffer, entry *logrus.Entry, keys 
 			fmt.Fprintf(b, " %s=%+v", levelColor(k), v)
 		}
 	}
+}
+
+func (f *TextFormatter) extractPrefix(entry *logrus.Entry) string {
+	prefix := ""
+	if prefixValue, ok := entry.Data["prefix"]; ok {
+		prefix = prefixValue.(string)
+	} else if entry.Context != nil {
+		if val := entry.Context.Value("logging-context"); val != nil {
+			if valLC, ok := val.(LoggingContext); ok {
+				prefix = valLC.String()
+			}
+		}
+	}
+	return prefix
 }
 
 func (f *TextFormatter) needsQuoting(text string) bool {
