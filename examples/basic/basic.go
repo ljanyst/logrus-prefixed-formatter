@@ -1,14 +1,15 @@
 package main
 
 import (
-	"github.com/sirupsen/logrus"
 	prefixed "github.com/ljanyst/logrus-prefixed-formatter"
+	"github.com/sirupsen/logrus"
 )
 
 var log = logrus.New()
 
 func init() {
 	formatter := new(prefixed.TextFormatter)
+	formatter.MinPrefixWidth = 10
 	log.Formatter = formatter
 	log.Level = logrus.DebugLevel
 }
@@ -21,7 +22,8 @@ func main() {
 			log.WithFields(logrus.Fields{
 				"omg":    true,
 				"number": 100,
-			}).Fatal("[main] The ice breaks!")
+				"prefix": "main",
+			}).Fatal("The ice breaks!")
 		}
 	}()
 
@@ -36,13 +38,14 @@ func main() {
 	log.WithFields(logrus.Fields{
 		"animal": "walrus",
 		"size":   10,
-	}).Debug("[main] A group of walrus emerges from the ocean")
+		"prefix": "main",
+	}).Debug("A group of walrus emerges from the ocean")
 
 	// Warning message
 	log.WithFields(logrus.Fields{
 		"omg":    true,
 		"number": 122,
-	}).Warn("[main] The group's number increased tremendously!")
+	}).Warn("The group's number increased tremendously!")
 
 	// Information message
 	log.WithFields(logrus.Fields{
