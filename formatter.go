@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/mgutz/ansi"
-	"golang.org/x/crypto/ssh/terminal"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/term"
 )
 
 const defaultTimestampFormat = time.RFC3339
@@ -110,6 +109,9 @@ type TextFormatter struct {
 	// Its default value is zero, which means no padding will be applied for msg.
 	SpacePadding int
 
+	// The prefixes will be padded to be the length specified by this value.
+	MinPrefixWidth int
+
 	// Color scheme to use.
 	colorScheme *compiledColorScheme
 
@@ -154,7 +156,7 @@ func (f *TextFormatter) init(entry *logrus.Entry) {
 func (f *TextFormatter) checkIfTerminal(w io.Writer) bool {
 	switch v := w.(type) {
 	case *os.File:
-		return terminal.IsTerminal(int(v.Fd()))
+		return term.IsTerminal(int(v.Fd()))
 	default:
 		return false
 	}
@@ -254,13 +256,12 @@ func (f *TextFormatter) printColored(b *bytes.Buffer, entry *logrus.Entry, keys 
 	message := entry.Message
 
 	if prefixValue, ok := entry.Data["prefix"]; ok {
-		prefix = colorScheme.PrefixColor(" " + prefixValue.(string) + ":")
-	} else {
-		prefixValue, trimmedMsg := extractPrefix(entry.Message)
-		if len(prefixValue) > 0 {
-			prefix = colorScheme.PrefixColor(" " + prefixValue + ":")
-			message = trimmedMsg
+		if f.MinPrefixWidth != 0 {
+			prefix = fmt.Sprintf("%-*s", f.MinPrefixWidth, prefixValue.(string))
+		} else {
+			prefix = prefixValue.(string)
 		}
+		prefix = colorScheme.PrefixColor(" [" + prefix + "]")
 	}
 
 	messageFormat := "%s"
@@ -302,16 +303,6 @@ func (f *TextFormatter) needsQuoting(text string) bool {
 	return false
 }
 
-func extractPrefix(msg string) (string, string) {
-	prefix := ""
-	regex := regexp.MustCompile("^\\[(.*?)\\]")
-	if regex.MatchString(msg) {
-		match := regex.FindString(msg)
-		prefix, msg = match[1:len(match)-1], strings.TrimSpace(msg[len(match):])
-	}
-	return prefix, msg
-}
-
 func (f *TextFormatter) appendKeyValue(b *bytes.Buffer, key string, value interface{}, appendSpace bool) {
 	b.WriteString(key)
 	b.WriteByte('=')
@@ -345,12 +336,12 @@ func (f *TextFormatter) appendValue(b *bytes.Buffer, value interface{}) {
 // This is to not silently overwrite `time`, `msg` and `level` fields when
 // dumping it. If this code wasn't there doing:
 //
-//  logrus.WithField("level", 1).Info("hello")
+//	logrus.WithField("level", 1).Info("hello")
 //
 // would just silently drop the user provided level. Instead with this code
 // it'll be logged as:
 //
-//  {"level": "info", "fields.level": 1, "msg": "hello", "time": "..."}
+//	{"level": "info", "fields.level": 1, "msg": "hello", "time": "..."}
 func prefixFieldClashes(data logrus.Fields) {
 	if t, ok := data["time"]; ok {
 		data["fields.time"] = t
