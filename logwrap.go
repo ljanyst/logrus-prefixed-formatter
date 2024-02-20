@@ -16,7 +16,7 @@ func Log(ctx context.Context) *LogWrap {
 }
 
 func LogCustom(log *logrus.Logger, ctx context.Context) *LogWrap {
-	return &LogWrap{logrus.StandardLogger(), ctx}
+	return &LogWrap{log, ctx}
 }
 
 func (l *LogWrap) Tracef(format string, args ...interface{}) {
