@@ -4,9 +4,9 @@ Logrus Prefixed Formatter
 
 This is a fork of the [Logrus Prefixed Formatter][1] which itself is a
 [Logrus][2] formatter mainly based on original `logrus.TextFormatter` but with
-slightly modified colored output and custom color themes are supported. The
-original formatter supported source prefixes (hence the name), but these have
-been removed.
+a slightly modified colored output and support for custom color themes. We also
+enable prefixing of log messages using either a field in the log entry called
+"prefix" or an object called "logging-context" extracted from a context.
 
 Usage
 -----
@@ -44,6 +44,50 @@ func main() {
 }
 ```
 
+And here's how it's used with contexts:
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+
+	prefixed "github.com/ljanyst/logrus-prefixed-formatter"
+	"github.com/sirupsen/logrus"
+)
+
+type TestContext struct {
+	Type string
+	Foo  string
+	Bar  int
+}
+
+func (t *TestContext) String() string {
+	return fmt.Sprintf("%-5s f: %-10s b: %3d", t.Type, t.Foo, t.Bar)
+}
+
+func init() {
+	formatter := new(prefixed.TextFormatter)
+	formatter.MinPrefixWidth = 25
+	logrus.SetFormatter(formatter)
+	logrus.SetLevel(logrus.DebugLevel)
+}
+
+func main() {
+	logrus.Info("Before context")
+	ctx := &TestContext{}
+	log := prefixed.Log(context.WithValue(context.Background(), "logging-context", ctx))
+	log.Debugf("Started observing beach")
+	ctx.Type = "foo"
+	log.Debugf("A group of walrus emerges from the ocean")
+	ctx.Foo = "bar"
+	log.Warnf("The group's number increased tremendously!")
+	ctx.Bar = 42
+	log.Infof("Temperature changes")
+}
+```
+
 API
 ---
 
@@ -73,6 +117,9 @@ API
  * `SpacePadding int` — pad msg field with spaces on the right for display.
    The value for this parameter will be the size of padding. Its default value
    is zero, which means no padding will be applied.
+ * `MinPrefixWidth int` - the prefixes will be padded to be the length specified
+   by this value. If the value is zero (the default), no padding will be
+   applied.
 
 ### Methods
 
@@ -113,6 +160,18 @@ formatter.SetColorScheme(&prefixed.ColorScheme{
     TimestampStyle: "white+h",
 })
 ```
+
+`prefixed.Log` creates a logrus log wrapper that calls the message functions
+on log entries created with context:
+
+```go
+func (l *LogWrap) Tracef(format string, args ...interface{}) {
+	l.log.WithContext(l.ctx).Tracef(format, args...)
+}
+```
+
+This removes the need for manually setting the context for every log entry
+in a given scope.
 
 License
 -------
