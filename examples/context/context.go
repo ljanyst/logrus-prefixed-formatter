@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	prefixed "github.com/ljanyst/logrus-prefixed-formatter"
+	"github.com/ljanyst/pre"
 	"github.com/sirupsen/logrus"
 )
 
@@ -19,7 +19,7 @@ func (t *TestContext) String() string {
 }
 
 func init() {
-	formatter := new(prefixed.TextFormatter)
+	formatter := new(pre.TextFormatter)
 	formatter.MinPrefixWidth = 25
 	logrus.SetFormatter(formatter)
 	logrus.SetLevel(logrus.DebugLevel)
@@ -28,7 +28,7 @@ func init() {
 func main() {
 	logrus.Info("Before context")
 	ctx := &TestContext{}
-	log := prefixed.Log(context.WithValue(context.Background(), "logging-context", ctx))
+	log := pre.Log(context.WithValue(context.Background(), "logging-context", ctx))
 	log.Debugf("Started observing beach")
 	ctx.Type = "foo"
 	log.Debugf("A group of walrus emerges from the ocean")

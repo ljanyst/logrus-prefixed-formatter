@@ -1,4 +1,4 @@
-module github.com/ljanyst/logrus-prefixed-formatter
+module github.com/ljanyst/pre
 
 go 1.21.6
 

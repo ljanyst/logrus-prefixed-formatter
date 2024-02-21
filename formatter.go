@@ -1,4 +1,4 @@
-package prefixed
+package pre
 
 import (
 	"bytes"

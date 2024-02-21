@@ -1,14 +1,14 @@
 package main
 
 import (
-	prefixed "github.com/ljanyst/logrus-prefixed-formatter"
+	"github.com/ljanyst/pre"
 	"github.com/sirupsen/logrus"
 )
 
 var log = logrus.New()
 
 func init() {
-	formatter := new(prefixed.TextFormatter)
+	formatter := new(pre.TextFormatter)
 	formatter.MinPrefixWidth = 10
 	log.Formatter = formatter
 	log.Level = logrus.DebugLevel

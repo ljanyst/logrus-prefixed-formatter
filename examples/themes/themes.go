@@ -1,18 +1,18 @@
 package main
 
 import (
+	"github.com/ljanyst/pre"
 	"github.com/sirupsen/logrus"
-	prefixed "github.com/ljanyst/logrus-prefixed-formatter"
 )
 
 var log = logrus.New()
 
 func init() {
-	formatter := new(prefixed.TextFormatter)
+	formatter := new(pre.TextFormatter)
 	formatter.FullTimestamp = true
 
 	// Set specific colors for prefix and timestamp
-	formatter.SetColorScheme(&prefixed.ColorScheme{
+	formatter.SetColorScheme(&pre.ColorScheme{
 		PrefixStyle:    "blue+b",
 		TimestampStyle: "white+h",
 	})

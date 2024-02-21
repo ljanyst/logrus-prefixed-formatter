@@ -1,6 +1,6 @@
 
-Logrus Prefixed Formatter
-=========================
+Pre
+===
 
 This is a fork of the [Logrus Prefixed Formatter][1] which itself is a
 [Logrus][2] formatter mainly based on original `logrus.TextFormatter` but with
@@ -18,11 +18,11 @@ package main
 
 import (
 	log "github.com/sirupsen/logrus"
-	prefixed "github.com/ljanyst/logrus-prefixed-formatter"
+	"github.com/ljanyst/pre"
 )
 
 func init() {
-	log.SetFormatter(&prefixed.TextFormatter{
+	log.SetFormatter(&pre.TextFormatter{
 		TimestampFormat: "2006-01-02 15:04:05",
 		FullTimestamp:   true,
 		ForceFormatting: true,
@@ -53,7 +53,7 @@ import (
 	"context"
 	"fmt"
 
-	prefixed "github.com/ljanyst/logrus-prefixed-formatter"
+	"github.com/ljanyst/pre"
 	"github.com/sirupsen/logrus"
 )
 
@@ -68,7 +68,7 @@ func (t *TestContext) String() string {
 }
 
 func init() {
-	formatter := new(prefixed.TextFormatter)
+	formatter := new(pre.TextFormatter)
 	formatter.MinPrefixWidth = 25
 	logrus.SetFormatter(formatter)
 	logrus.SetLevel(logrus.DebugLevel)
@@ -77,7 +77,7 @@ func init() {
 func main() {
 	logrus.Info("Before context")
 	ctx := &TestContext{}
-	log := prefixed.Log(context.WithValue(context.Background(), "logging-context", ctx))
+	log := pre.Log(context.WithValue(context.Background(), "logging-context", ctx))
 	log.Debugf("Started observing beach")
 	ctx.Type = "foo"
 	log.Debugf("A group of walrus emerges from the ocean")
@@ -91,7 +91,7 @@ func main() {
 API
 ---
 
-`prefixed.TextFormatter` exposes the following fields and methods.
+`pre.TextFormatter` exposes the following fields and methods.
 
 ### Fields
 
@@ -123,9 +123,9 @@ API
 
 ### Methods
 
-`SetColorScheme(colorScheme *prefixed.ColorScheme)`
+`SetColorScheme(colorScheme *pre.ColorScheme)`
 
-Sets an alternative color scheme for colored output. `prefixed.ColorScheme`
+Sets an alternative color scheme for colored output. `pre.ColorScheme`
 struct supports the following fields:
 
  * `InfoLevelStyle string` — info level style.
@@ -155,13 +155,13 @@ It's not necessary to specify all colors when changing color scheme if you want
 to change just specific ones:
 
 ```go
-formatter.SetColorScheme(&prefixed.ColorScheme{
+formatter.SetColorScheme(&pre.ColorScheme{
     PrefixStyle:    "blue+b",
     TimestampStyle: "white+h",
 })
 ```
 
-`prefixed.Log` creates a logrus log wrapper that calls the message functions
+`pre.Log` creates a logrus log wrapper that calls the message functions
 on log entries created with context:
 
 ```go
